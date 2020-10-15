@@ -52,13 +52,11 @@ function filterByBaseRef(pullRequests, ref) {
 }
 
 function getPromisesAndRefs(pullRequests) {
-  const promises = [];
   const refs = {};
   for (const pr of pullRequests) {
-    promises.push(getPullRequestReviews(pr.number));
     refs[pr.number] = pr.head.ref;
   }
-  return { promises, refs };
+  return { refs };
 }
 
 function sleep(ms) {
@@ -75,9 +73,9 @@ async function main() {
     pullRequests = filterByBaseRef(pullRequests.data, baseRef);
     core.info(`There are ${pullRequests.length} open PRs with "${baseRef}" base ref`);
     core.info(`Getting their reviews...`);
-    const { promises, refs } = getPromisesAndRefs(pullRequests);
-    const pullRequestsReviewsResolved = await Promise.all(promises);
-    const pullRequestsReviews = createMapping(pullRequestsReviewsResolved);
+    const { refs } = getPromisesAndRefs(pullRequests);
+    // const pullRequestsReviewsResolved = await Promise.all(promises);
+    const pullRequestsReviews = createMapping(refs);
     for (const [prNumber, approvals] of Object.entries(pullRequestsReviews)) {
       
       core.info(`Automerging PR #${prNumber} (${minApprovals} approvals)`);
