@@ -52,11 +52,13 @@ function filterByBaseRef(pullRequests, ref) {
 }
 
 function getPromisesAndRefs(pullRequests) {
+  const promises = [];
   const refs = {};
   for (const pr of pullRequests) {
+    promises.push(getPullRequestReviews(pr.number));
     refs[pr.number] = pr.head.ref;
   }
-  return { refs };
+  return { promises, refs };
 }
 
 function sleep(ms) {
@@ -73,17 +75,20 @@ async function main() {
     pullRequests = filterByBaseRef(pullRequests.data, baseRef);
     core.info(`There are ${pullRequests.length} open PRs with "${baseRef}" base ref`);
     core.info(`Getting their reviews...`);
-    const { refs } = getPromisesAndRefs(pullRequests);
-    // const pullRequestsReviewsResolved = await Promise.all(promises);
-    const pullRequestsReviews = createMapping(refs);
+    const { promises, refs } = getPromisesAndRefs(pullRequests);
+    const pullRequestsReviewsResolved = await Promise.all(promises);
+    const pullRequestsReviews = createMapping(pullRequestsReviewsResolved);
     for (const [prNumber, approvals] of Object.entries(pullRequestsReviews)) {
-      
-      core.info(`Automerging PR #${prNumber} (${minApprovals} approvals)`);
-      await mergePullRequest(prNumber, merge_method);
-      core.info(`Waiting ${WAIT_MS / 1000}s before next merge...`);
-      await sleep(WAIT_MS);
-      await deleteHeadRef(refs[prNumber]);
-
+      core.info(`Working on PR  #${prNumber}`);
+      if (approvals >= 0) {
+        core.info(`Automerging PR #${prNumber} (${minApprovals} approvals)`);
+        await mergePullRequest(prNumber, merge_method);
+        core.info(`Waiting ${WAIT_MS / 1000}s before next merge...`);
+        await sleep(WAIT_MS);
+        await deleteHeadRef(refs[prNumber]);
+      } else {
+        core.info(`Skipping PR #${prNumber} (${approvals} approvals)`);
+      }
     }
   } catch (error) {
     core.setFailed(error.message);
