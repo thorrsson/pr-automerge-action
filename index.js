@@ -79,15 +79,13 @@ async function main() {
     const pullRequestsReviewsResolved = await Promise.all(promises);
     const pullRequestsReviews = createMapping(pullRequestsReviewsResolved);
     for (const [prNumber, approvals] of Object.entries(pullRequestsReviews)) {
-      if (approvals >= +minApprovals) {
-        core.info(`Automerging PR #${prNumber} (${minApprovals} approvals)`);
-        await mergePullRequest(prNumber, merge_method);
-        core.info(`Waiting ${WAIT_MS / 1000}s before next merge...`);
-        await sleep(WAIT_MS);
-        await deleteHeadRef(refs[prNumber]);
-      } else {
-        core.info(`Skipping PR #${prNumber} (${approvals} approvals)`);
-      }
+      
+      core.info(`Automerging PR #${prNumber} (${minApprovals} approvals)`);
+      await mergePullRequest(prNumber, merge_method);
+      core.info(`Waiting ${WAIT_MS / 1000}s before next merge...`);
+      await sleep(WAIT_MS);
+      await deleteHeadRef(refs[prNumber]);
+
     }
   } catch (error) {
     core.setFailed(error.message);

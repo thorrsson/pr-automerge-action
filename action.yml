@@ -1,5 +1,5 @@
 name: 'Pull request automerge action'
-description: 'GitHub Action to automatically merge pull requests when some conditions are met'
+description: 'GitHub Action to automatically merge pull requests'
 branding:
   icon: 'git-merge'
   color: 'purple'
@@ -8,10 +8,6 @@ inputs:
     description: 'Pull request merge method. One between merge, squash, rebase'
     required: false
     default: 'squash'
-  min-approvals:
-    description: 'Minimum numbers of approvals to merge the pull request'
-    required: false
-    default: 2
   base-ref:
     description: 'Base ref branch to filter pull requests'
     required: false
